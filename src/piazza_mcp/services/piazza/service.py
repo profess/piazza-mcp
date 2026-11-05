@@ -29,6 +29,10 @@ PIAZZA_LIMITATIONS = [
 ]
 
 
+class PiazzaValidationError(ValueError):
+    """Raised for rejected tool arguments; messages never echo their values."""
+
+
 class PiazzaService:
     def __init__(
         self,
@@ -156,12 +160,12 @@ class PiazzaService:
     ) -> dict[str, Any]:
         self._validate_course(course_id)
         if not isinstance(query, str):
-            raise ValueError("query must be a string")
+            raise PiazzaValidationError("query must be a string")
         normalized_query = query.strip()
         if not normalized_query:
-            raise ValueError("query must not be empty")
+            raise PiazzaValidationError("query must not be empty")
         if len(normalized_query) > 200:
-            raise ValueError("query cannot exceed 200 characters")
+            raise PiazzaValidationError("query cannot exceed 200 characters")
         self._validate_integer(max_results, "max_results", 1, 25)
 
         async def load() -> dict[str, Any]:
@@ -303,9 +307,9 @@ class PiazzaService:
 
     def _validate_course(self, course_id: str) -> None:
         if not isinstance(course_id, str):
-            raise ValueError("course_id must be a string")
+            raise PiazzaValidationError("course_id must be a string")
         if course_id not in self.config.courses:
-            raise ValueError("course_id is not a configured Piazza course")
+            raise PiazzaValidationError("course_id is not a configured Piazza course")
 
     @staticmethod
     def _validate_filters(filters: object) -> tuple[str, ...]:
@@ -317,7 +321,7 @@ class PiazzaService:
             or any(value not in valid_filters for value in filters)
             or len(set(filters)) != len(filters)
         ):
-            raise ValueError(
+            raise PiazzaValidationError(
                 "filters must contain 1 to 3 unique values from updated, "
                 "following, or folder"
             )
@@ -330,17 +334,17 @@ class PiazzaService:
     ) -> str | None:
         if "folder" not in filters:
             if folder_name is not None:
-                raise ValueError(
+                raise PiazzaValidationError(
                     "folder_name is only valid for the folder filter"
                 )
             return None
         if type(folder_name) is not str or not folder_name.strip():
-            raise ValueError(
+            raise PiazzaValidationError(
                 "folder_name is required for the folder filter"
             )
         normalized_folder = folder_name.strip()
         if len(normalized_folder) > 100:
-            raise ValueError("folder_name cannot exceed 100 characters")
+            raise PiazzaValidationError("folder_name cannot exceed 100 characters")
         return normalized_folder
 
     @staticmethod
@@ -351,7 +355,7 @@ class PiazzaService:
         maximum: int,
     ) -> None:
         if type(value) is not int or not minimum <= value <= maximum:
-            raise ValueError(
+            raise PiazzaValidationError(
                 f"{name} must be an integer from {minimum} to {maximum}"
             )
 

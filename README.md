@@ -141,9 +141,11 @@ reveal data.
 - **Piazza login:** The unofficial client uses an email/password login.
   Accounts that require institution-only SSO may not work.
 
-The package uses the MCP Python SDK v1 low-level `Server` decorator API and
-declares `mcp>=1.28.1,<2`. This dependency is installed by `uv`; users do not
-need to install it separately.
+The package is built on FastMCP 4 and the MCP Python SDK v2, and declares
+`fastmcp>=4.1.6,<4.2`. These dependencies are installed by `uv`; users do not
+need to install them separately. `FASTMCP_*` settings in `.env` are ignored.
+Avoid setting `FASTMCP_LOG_LEVEL=DEBUG` in the process environment, because it
+logs tool arguments such as course IDs and search queries.
 
 Process environment variables take precedence over values in `.env`. The
 checkout-local `.env` is loaded lazily when the first Piazza tool is called.

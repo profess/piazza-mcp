@@ -126,6 +126,7 @@ jobs:
           fi
 
       - name: Smoke-test installed wheel
+        timeout-minutes: 5
         run: |
           smoke_root="$(mktemp -d)"
           uv venv "$smoke_root/venv" --python 3.14
@@ -135,6 +136,9 @@ jobs:
             "$smoke_root/venv/bin/python" -c \
               "import piazza_mcp; import piazza_mcp.server"
             test -x "$smoke_root/venv/bin/piazza-mcp"
+            "$smoke_root/venv/bin/python" -I \
+              "$GITHUB_WORKSPACE/scripts/smoke_stdio.py" \
+              "$smoke_root/venv/bin/piazza-mcp"
           )
 
       - name: Upload distributions

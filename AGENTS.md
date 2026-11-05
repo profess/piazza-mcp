@@ -6,10 +6,10 @@ This project is a Python MCP server. The package source lives under
 ## Runtime Compatibility
 
 - Support Python 3.10 through 3.14.
-- The server currently uses the MCP Python SDK v1 low-level `Server` decorator
-  API. Keep the runtime requirement at `mcp>=1.28.1,<2` until an intentional
-  MCP 2 migration updates the handlers, result construction, tests, and
-  transport setup together.
+- The server uses FastMCP 4 on the MCP Python SDK v2. Keep `fastmcp` capped to
+  one minor series (currently `>=4.1.6,<4.2`), because FastMCP minor releases
+  may include breaking changes. Raise the cap only after reviewing the
+  changelog and passing `tests/server/test_stdio_contract.py`.
 - When changing dependencies, update both `pyproject.toml` and `uv.lock`.
 - Do not assume that passing locked tests proves package compatibility. For
   dependency or packaging changes, install the built wheel in a clean
@@ -18,9 +18,17 @@ This project is a Python MCP server. The package source lives under
 
 ## Architecture
 
-- `src/piazza_mcp/server.py` is the MCP protocol boundary. Keep MCP handlers thin.
-- `src/piazza_mcp/mcp_tools/` owns tool descriptions, input schemas, and MCP
-  annotations.
+- `src/piazza_mcp/server.py` creates and runs the FastMCP server. Keep its
+  safety settings (`strict_input_validation`, `mask_error_details`, and
+  `show_banner=False`) explicit.
+- `src/piazza_mcp/mcp_tools/` owns tool descriptions, input schemas, MCP
+  annotations, and thin handlers. Every handler must call the service through
+  `boundary.run_tool`, which validates output and keeps exception text out of
+  client results and logs.
+- `src/piazza_mcp/__init__.py` stops FastMCP from loading a `.env` file. Keep
+  that before anything can import FastMCP. `FASTMCP_*` values in the real
+  process environment still apply, and `FASTMCP_LOG_LEVEL=DEBUG` logs tool
+  arguments, so never set it where logs are kept.
 - `src/piazza_mcp/mcp_schemas/` owns structured-output schemas.
 - `src/piazza_mcp/services/` contains domain and service logic.
 - `src/piazza_mcp/models/` contains simple data structures.
@@ -116,7 +124,9 @@ uv build
   Python 3.14 environment and verify `import piazza_mcp.server` plus the
   `piazza-mcp` console entry point.
 - For MCP tool changes, test the catalog, registered dispatch path, input
-  schema, and structured-output schema.
+  schema, and structured-output schema through
+  `tests/server/test_stdio_contract.py`. `tests/fixtures/mcp_tool_catalog.json`
+  is the published tool contract: update it only for an intended change.
 - For configuration changes, test lazy loading so importing the server never
   requires credentials.
 - Never use real credentials or live external calls as test fixtures.
