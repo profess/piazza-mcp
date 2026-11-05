@@ -8,7 +8,7 @@ from .client import (
 from .factory import get_piazza_service
 from .normalizer import PiazzaNormalizer
 from .profiler import PiazzaShapeProfiler
-from .service import PiazzaService
+from .service import PiazzaService, PiazzaValidationError
 
 __all__ = [
     "PiazzaAuthenticationError",
@@ -19,5 +19,6 @@ __all__ = [
     "PiazzaShapeProfiler",
     "PiazzaService",
     "PiazzaTimeoutError",
+    "PiazzaValidationError",
     "get_piazza_service",
 ]
